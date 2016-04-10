@@ -20,39 +20,11 @@ public class GhostActivity extends ActionBarActivity {
     private static final String COMPUTER_TURN = "Computer's turn";
     private static final String USER_TURN = "Your turn";
     private static final String KEY_TEXT_VALUE ="key" ;
-    private SimpleDictionary dictionary;
+    private FastDictionary dictionary;
     private boolean userTurn = false;
     private Random random = new Random();
     TextView fragment;
     TextView status;
-
-    @Override
-    public boolean onKeyUp(int keyCode, KeyEvent event) {
-
-        char x= (char) event.getUnicodeChar();
-        if(x>='a' && x<='z') {
-            Log.d("if","worng");
-            String s = fragment.getText().toString();
-            s = s + Character.toString(x);
-
-            fragment.setText(s);
-
-            if(dictionary.isWord(s))
-            {
-                status.setText("Computer wins");
-            }
-            else
-            {
-                status.setText(COMPUTER_TURN);
-                computerTurn();
-            }
-        }
-        else
-        {
-            return super.onKeyUp(keyCode, event);
-        }
-        return true;
-}
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,14 +37,14 @@ public class GhostActivity extends ActionBarActivity {
         AssetManager assetManager = getAssets();
         try {
             InputStream inputStream = assetManager.open("words.txt");
-            dictionary = new SimpleDictionary(inputStream);
+            dictionary = new FastDictionary(inputStream);
 
         } catch (IOException e) {
             Toast toast = Toast.makeText(this, "Could not load dictionary", Toast.LENGTH_LONG);
             toast.show();
         }
 
-        initialise();
+        //initialise();
         onStart(null);
 
         if (savedInstanceState != null) {
@@ -81,8 +53,33 @@ public class GhostActivity extends ActionBarActivity {
         }
     }
 
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+
+        char x = (char) event.getUnicodeChar();
+        if (x >= 'a' && x <= 'z') {
+            String s = fragment.getText().toString();
+            s = s + Character.toString(x);
+
+            fragment.setText(s);
+
+            if (dictionary.isWord(s)) {
+                status.setText("Computer wins");
+            } else {
+                status.setText(COMPUTER_TURN);
+                computerTurn();
+            }
+        } else {
+            return super.onKeyUp(keyCode, event);
+        }
+        return true;
+    }
+
+
+
     public void initialise() {
-        String s = dictionary.getAnyWordStartingWith(null);
+        String s = dictionary.getGoodWordStartingWith(null);
 
         String upTo4Characters = s.substring(0, Math.min(s.length(), 4));
         fragment.setText(upTo4Characters);
@@ -115,25 +112,39 @@ public class GhostActivity extends ActionBarActivity {
         // Do computer turn stuff then make it the user's turn again
         userTurn = true;
         label.setText(USER_TURN);
-
         //My code:
         String input =  fragment.getText().toString();
         if(input.equals(""))
         {
             String newWord;
-            newWord = dictionary.getAnyWordStartingWith(input);
+            String alphabets = "abcdefghijklmnopqrstuvwxyz";
+            char alpha[] = alphabets.toCharArray();
+            Random random = new Random();
+            int i = random.nextInt(26);
 
-            if(newWord == null)
+            //newWord = dictionary.getGoodWordStartingWith(alpha[i]+"");
+            fragment.setText(alpha[i]+"");
+            userTurn = true;
+            label.setText(USER_TURN);
+
+            /*if(newWord == null)
             {
                 // computer wins
                 status.setText("Computer wins");
             }
-            else {
-                char c = newWord.charAt(input.length());
-                input += String.valueOf(c);
 
-                fragment.setText(input);
-            }
+                if (!dictionary.isWord(newWord)) {
+                    char c = newWord.charAt(input.length());
+                    input += String.valueOf(c);
+
+                    fragment.setText(input);
+                    userTurn = true;
+                    label.setText(USER_TURN);
+                }
+                else {
+                    status.setText("User wins");
+                }*/
+
         }
         else
         {
@@ -143,7 +154,7 @@ public class GhostActivity extends ActionBarActivity {
             else
             {
                 String newWord;
-                newWord = dictionary.getAnyWordStartingWith(input);
+                newWord = dictionary.getGoodWordStartingWith(input);
 
                 if(newWord == null)
                 {
@@ -153,9 +164,9 @@ public class GhostActivity extends ActionBarActivity {
                 else {
                     char c = newWord.charAt(input.length());
                     input += String.valueOf(c);
-
                     fragment.setText(input);
                 }
+
             }
         }
 
@@ -169,10 +180,9 @@ public class GhostActivity extends ActionBarActivity {
      */
     public boolean onStart(View view) {
         userTurn = random.nextBoolean();
-
-        initialise();
-        //TextView frag = (TextView) findViewById(R.id.ghostText);
-        //frag.setText("");
+        //initialise();
+        TextView frag = (TextView) findViewById(R.id.ghostText);
+        frag.setText("");
 
         TextView label = (TextView) findViewById(R.id.gameStatus);
         if (userTurn) {
@@ -195,7 +205,7 @@ public class GhostActivity extends ActionBarActivity {
         }
         else if(!dictionary.isWord(computerWord)){
 
-            if((temp = dictionary.getAnyWordStartingWith(computerWord))==null)
+            if((temp = dictionary.getGoodWordStartingWith(computerWord))==null)
             {
                 status.setText("User wins");
             }
